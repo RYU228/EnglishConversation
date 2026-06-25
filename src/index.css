@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceCustom1 {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes bounceCustom2 {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.4); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-bounce-custom-1 {
+  animation: bounceCustom1 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.animate-bounce-custom-2 {
+  animation: bounceCustom2 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}

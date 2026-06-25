@@ -1,0 +1,6 @@
+{
+  "name": "English Conversation Repeat Learning App",
+  "description": "Android와 iOS에서 동작하는 Material 3 기반의 Flutter 영어 회화 반복 및 자동 학습 어플리케이션 및 웹 에뮬레이터",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

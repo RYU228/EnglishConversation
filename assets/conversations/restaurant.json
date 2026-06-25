@@ -1,0 +1,173 @@
+{
+  "title": "식당",
+  "dialogs": [
+    {
+      "english": [
+        "Are you ready to order, or do you need a few more minutes?",
+        "We are ready! We would like to order the ribeye steak and a caesar salad."
+      ],
+      "korean": [
+        "주문하시겠습니까, 아니면 시간이 좀 더 필요하신가요?",
+        "주문할게요! 등심 스테이크와 시저 샐러드를 주문하고 싶습니다."
+      ],
+      "pattern": "Are you ready to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "How would you like your steak cooked?",
+        "Medium-rare, please. And could we have the dressing on the side?"
+      ],
+      "korean": [
+        "스테이크의 굽기 정도는 어떻게 해드릴까요?",
+        "미디엄 레어로 해주세요. 그리고 드레싱은 따로 주실 수 있나요?"
+      ],
+      "pattern": "How would you ~",
+      "difficulty": "hard"
+    },
+    {
+      "english": [
+        "Excuse me, could we get some more water and some napkins?",
+        "Of course, I will bring them to your table right away."
+      ],
+      "korean": [
+        "실례지만, 물 좀 더 주시고 냅킨도 몇 장 주시겠어요?",
+        "네, 곧바로 테이블로 가져다 드리겠습니다."
+      ],
+      "pattern": "Could we get ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Could we have the bill, please?",
+        "Certainly. Would you like to pay together or separately?"
+      ],
+      "korean": [
+        "계산서 좀 주시겠어요?",
+        "물론입니다. 같이 계산하시겠습니까, 아니면 따로 하시겠습니까?"
+      ],
+      "pattern": "Could we have ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Do you have a reservation for tonight?",
+        "Yes, I made a reservation under Kim at seven PM."
+      ],
+      "korean": [
+        "오늘 밤 예약하셨나요?",
+        "네, 오후 7시에 김 씨 성으로 예약했습니다."
+      ],
+      "pattern": "Do you have ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Would you like to try some wine with your steak?",
+        "No thanks, I'll just have a glass of coke instead."
+      ],
+      "korean": [
+        "스테이크와 함께 와인을 좀 드셔보시겠습니까?",
+        "아닙니다, 대신 콜라 한 잔만 마실게요."
+      ],
+      "pattern": "Would you like to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "I'm sorry, but this dish is not what I ordered.",
+        "Oh, I'm terribly sorry. I will replace it with the correct one right away."
+      ],
+      "korean": [
+        "죄송하지만 이 요리는 제가 주문한 게 아니에요.",
+        "아, 대단히 죄송합니다. 바로 올바른 음식으로 바꿔 드리겠습니다."
+      ],
+      "pattern": "This is not what I ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "Could you tell me what the ingredients in this soup are?",
+        "It is made with fresh seafood, tomatoes, and some herbs."
+      ],
+      "korean": [
+        "이 스프에 들어간 재료가 뭔지 말씀해 주실 수 있나요?",
+        "신선한 해산물과 토마토, 그리고 약간의 허브로 만들어졌습니다."
+      ],
+      "pattern": "Could you tell me what ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "It's hard to choose from so many options on the menu.",
+        "In that case, the chef's special pasta is always a safe bet."
+      ],
+      "korean": [
+        "메뉴판에 선택지가 너무 많아서 고르기가 힘드네요.",
+        "그렇다면 셰프 추천 파스타가 항상 가장 무난한 선택입니다."
+      ],
+      "pattern": "It's hard to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Make sure to wrap up the leftovers for us, please.",
+        "Sure. I will pack them in a to-go container for you."
+      ],
+      "korean": [
+        "남은 음식은 꼭 좀 포장해 주세요.",
+        "알겠습니다. 포장용 용기에 담아 드리겠습니다."
+      ],
+      "pattern": "Make sure to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I used to love spicy food, but now it hurts my stomach.",
+        "Then you should definitely avoid the chili noodles here."
+      ],
+      "korean": [
+        "예전엔 매운 음식을 정말 좋아했는데, 이젠 위가 아프네요.",
+        "그럼 여기 있는 매운 국수는 무조건 피하셔야겠어요."
+      ],
+      "pattern": "I used to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "How long do we have to wait for a table?",
+        "The waiting time is about twenty minutes right now."
+      ],
+      "korean": [
+        "자리가 나려면 얼마나 기다려야 하나요?",
+        "지금 대기 시간은 20분 정도입니다."
+      ],
+      "pattern": "How long do we have to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "Is it possible to get a table by the window?",
+        "Let me check. Yes, luckily a window seat just opened up."
+      ],
+      "korean": [
+        "창가 쪽 자리를 잡는 것이 가능할까요?",
+        "확인해 보겠습니다. 네, 다행히 방금 창가 자리가 하나 났네요."
+      ],
+      "pattern": "Is it possible to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "I'd rather skip dessert and just get the check.",
+        "Sure thing. I will bring the bill to your table."
+      ],
+      "korean": [
+        "저는 디저트는 건너뛰고 바로 계산서를 받고 싶어요.",
+        "알겠습니다. 테이블로 계산서를 가져다 드릴게요."
+      ],
+      "pattern": "I'd rather ~",
+      "difficulty": "hard"
+    }
+  ]
+}
