@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/dialog_item.dart';
 import '../services/conversation_service.dart';
 import '../services/tts_service.dart';
@@ -11,6 +12,7 @@ class StudyProvider with ChangeNotifier {
   final TtsService _ttsService = TtsService();
 
   // 학습 상태 변수들
+  String _currentTopicKey = "";
   String _currentTopicTitle = "";
   List<DialogItem> _dialogs = [];
   int _currentDialogIndex = 0;
@@ -21,6 +23,10 @@ class StudyProvider with ChangeNotifier {
   int _targetRepeatCount = 3;  // 목표 반복 횟수 (SettingsProvider에서 공급)
   bool _revealTranslation = false; // 문장 및 한글 번역 공개 상태
   bool _isLoading = false;
+
+  // 추가 기능 상태
+  Map<int, String> _dialogStatus = {};
+  int _hintLevel = 4; // 1: 한글만, 2: 패턴만, 3: 빈칸채우기, 4: 전체대본
 
   Timer? _autoProceedTimer;
   bool _disposed = false;
@@ -35,6 +41,8 @@ class StudyProvider with ChangeNotifier {
   int get targetRepeatCount => _targetRepeatCount;
   bool get revealTranslation => _revealTranslation;
   bool get isLoading => _isLoading;
+  Map<int, String> get dialogStatus => _dialogStatus;
+  int get hintLevel => _hintLevel;
 
   /// 현재 진행 상태를 나타내는 진행율 (0.0 ~ 1.0)
   double get progress {
@@ -46,6 +54,24 @@ class StudyProvider with ChangeNotifier {
   DialogItem? get currentDialog {
     if (_dialogs.isEmpty || _currentDialogIndex >= _dialogs.length) return null;
     return _dialogs[_currentDialogIndex];
+  }
+
+  void setHintLevel(int level) {
+    _hintLevel = level;
+    notifyListeners();
+  }
+
+  void setRevealTranslation(bool reveal) {
+    _revealTranslation = reveal;
+    notifyListeners();
+  }
+
+  /// 자가 학습 피드백 상태 업데이트
+  Future<void> updateDialogStatus(int index, String status) async {
+    _dialogStatus[index] = status;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('dialog_status_${_currentTopicKey}_$index', status);
   }
 
   @override
@@ -63,16 +89,117 @@ class StudyProvider with ChangeNotifier {
     }
   }
 
+  /// 점진적 힌트 영어 대본 변환 헬퍼
+  String getHintedEnglish(String sentence, int level) {
+    if (level == 1) {
+      return ""; // 완전히 숨김
+    }
+    
+    if (level == 2) {
+      final List<String> patterns = [
+        "Do you have", "Could I", "I don't have to", "How about", "I'm looking for", 
+        "How have you been", "What are your", "It's really", "Did you have", 
+        "What can I", "Would you like", "Can I get", "Are you ready", "How would you", 
+        "Excuse me", "Where is", "What time is", "Is there", "Did you", "When is", "Is the"
+      ];
+      
+      final lowerSentence = sentence.toLowerCase().trim();
+      for (final pat in patterns) {
+        if (lowerSentence.startsWith(pat.toLowerCase())) {
+          final int patternLength = pat.length;
+          final String patternPart = sentence.substring(0, patternLength);
+          final String restPart = sentence.substring(patternLength);
+          final String maskedRest = restPart.replaceAll(RegExp(r'[a-zA-Z]'), "•");
+          return patternPart + maskedRest;
+        }
+      }
+      
+      final words = sentence.split(" ");
+      if (words.length <= 2) return sentence;
+      final visiblePart = words.sublist(0, 2).join(" ");
+      final hiddenPart = words.sublist(2).join(" ").replaceAll(RegExp(r'[a-zA-Z]'), "•");
+      return "$visiblePart $hiddenPart";
+    }
+    
+    if (level == 3) {
+      final List<String> words = sentence.split(" ");
+      if (words.length <= 1) return sentence;
+      
+      // 글자 수 기반 빈칸 대상 단어 추출
+      final List<MapEntry<int, int>> candidates = [];
+      for (int i = 0; i < words.length; i++) {
+        final cleanWord = words[i].replaceAll(RegExp(r'[.,?!]'), "");
+        if (cleanWord.length > 2) {
+          candidates.add(MapEntry(i, cleanWord.length));
+        }
+      }
+      
+      if (candidates.isEmpty) return sentence;
+      
+      // 긴 단어 위주 정렬
+      candidates.sort((a, b) => b.value.compareTo(a.value));
+      
+      final int countToHide = (words.length / 4).floor().clamp(1, 2);
+      final List<int> indicesToHide = candidates.take(countToHide).map((e) => e.key).toList();
+      
+      final List<String> resultWords = [];
+      for (int i = 0; i < words.length; i++) {
+        if (indicesToHide.contains(i)) {
+          final word = words[i];
+          final cleanWord = word.replaceAll(RegExp(r'[.,?!]'), "");
+          final String punc = RegExp(r'[.,?!]').allMatches(word).map((m) => m.group(0)).join();
+          resultWords.add("[${'_' * cleanWord.length}]$punc");
+        } else {
+          resultWords.add(words[i]);
+        }
+      }
+      return resultWords.join(" ");
+    }
+    
+    return sentence; // 4단계: 전체 노출
+  }
+
+  /// 상태별 가중치를 활용한 대화 추출 헬퍼
+  int getNextWeightedIndex(int currentIdx, int listLength, SharedPreferences prefs) {
+    if (listLength <= 1) return 0;
+    
+    final List<double> weights = List.generate(listLength, (i) {
+      final saved = prefs.getString('dialog_status_${_currentTopicKey}_$i');
+      if (saved == 'WRONG') return 5.0;      // 몰라요(오답): 가중치 5.0
+      if (saved == 'CONFUSED') return 3.0;   // 헷갈려요: 가중치 3.0
+      if (saved == 'KNOW') return 0.8;       // 알아요(정답): 가중치 0.8
+      return 2.0;                             // 기본/미지정: 가중치 2.0
+    });
+
+    // 직전 들었던 문장이 연속으로 바로 또 나오는 것 방지
+    if (currentIdx >= 0 && currentIdx < listLength) {
+      weights[currentIdx] = 0.1;
+    }
+
+    final double totalWeight = weights.reduce((sum, w) => sum + w);
+    double r = Random().nextDouble() * totalWeight;
+    
+    for (int i = 0; i < listLength; i++) {
+      r -= weights[i];
+      if (r <= 0) {
+        return i;
+      }
+    }
+    return (currentIdx + 1) % listLength;
+  }
+
   /// 1. 대화 리스트 로드 및 초기화
   Future<void> loadTopic(String topicKey, String topicTitle, int targetRepeats, bool randomize, {bool useAi = false}) async {
     _isLoading = true;
     _isPlaying = false;
     _isPaused = false;
-    _currentDialogIndex = 0;
     _currentRepeatIndex = 0;
     _targetRepeatCount = targetRepeats;
     _revealTranslation = false;
+    _hintLevel = 4; // 기본 전체 공개 모드
+    _currentTopicKey = topicKey;
     _currentTopicTitle = topicTitle;
+    _dialogStatus = {};
     notifyListeners();
 
     _autoProceedTimer?.cancel();
@@ -80,20 +207,28 @@ class StudyProvider with ChangeNotifier {
 
     // 서비스에서 데이터 로드
     List<DialogItem> loadedDialogs = await _conversationService.fetchDialogs(topicKey, useAi: useAi);
+    _dialogs = loadedDialogs;
 
-    if (randomize && loadedDialogs.isNotEmpty) {
-      final random = Random();
-      // 순서를 무작위로 섞음
-      loadedDialogs = List<DialogItem>.from(loadedDialogs)..shuffle(random);
+    // 로컬 저장소로부터 각 대화 상태 복원
+    final prefs = await SharedPreferences.getInstance();
+    for (int i = 0; i < loadedDialogs.length; i++) {
+      final saved = prefs.getString('dialog_status_${_currentTopicKey}_$i');
+      _dialogStatus[i] = saved ?? 'NONE';
     }
 
-    _dialogs = loadedDialogs;
+    // 만약 랜덤 재생이라면, 가중치가 반영된 무작위 인덱스부터 시작합니다.
+    int startIndex = 0;
+    if (randomize && loadedDialogs.isNotEmpty) {
+      startIndex = getNextWeightedIndex(-1, loadedDialogs.length, prefs);
+    }
+    _currentDialogIndex = startIndex;
+
     _isLoading = false;
     notifyListeners();
   }
 
   /// 2. 학습 재생 제어 루프 시작
-  Future<void> startStudy({required bool autoProceed, required Function onAutoProceeded}) async {
+  Future<void> startStudy({required bool autoProceed, required bool randomize, required Function onAutoProceeded}) async {
     if (_dialogs.isEmpty) return;
     
     if (_isPaused) {
@@ -101,7 +236,7 @@ class StudyProvider with ChangeNotifier {
       _isPaused = false;
       _isPlaying = true;
       notifyListeners();
-      _runStudyLoop(autoProceed: autoProceed, onAutoProceeded: onAutoProceeded);
+      _runStudyLoop(autoProceed: autoProceed, randomize: randomize, onAutoProceeded: onAutoProceeded);
       return;
     }
 
@@ -113,7 +248,7 @@ class StudyProvider with ChangeNotifier {
     notifyListeners();
 
     _autoProceedTimer?.cancel();
-    _runStudyLoop(autoProceed: autoProceed, onAutoProceeded: onAutoProceeded);
+    _runStudyLoop(autoProceed: autoProceed, randomize: randomize, onAutoProceeded: onAutoProceeded);
   }
 
   /// 3. 정적/동적 일시정지
@@ -137,35 +272,45 @@ class StudyProvider with ChangeNotifier {
   }
 
   /// 5. 이전 대화로 이동
-  void previousDialog() {
-    if (_currentDialogIndex > 0) {
+  void previousDialog({bool randomize = false}) async {
+    if (_dialogs.isEmpty) return;
+    
+    final prefs = await SharedPreferences.getInstance();
+    if (randomize) {
+      _currentDialogIndex = getNextWeightedIndex(_currentDialogIndex, _dialogs.length, prefs);
+    } else if (_currentDialogIndex > 0) {
       _currentDialogIndex--;
-      _currentRepeatIndex = 0;
-      _revealTranslation = false;
-      _isPaused = false;
-      _isPlaying = false;
-      _autoProceedTimer?.cancel();
-      _ttsService.stop();
-      notifyListeners();
     }
+    _currentRepeatIndex = 0;
+    _revealTranslation = false;
+    _isPaused = false;
+    _isPlaying = false;
+    _autoProceedTimer?.cancel();
+    _ttsService.stop();
+    notifyListeners();
   }
 
   /// 6. 다음 대화로 이동
-  void nextDialog() {
-    if (_currentDialogIndex < _dialogs.length - 1) {
+  void nextDialog({bool randomize = false}) async {
+    if (_dialogs.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    if (randomize) {
+      _currentDialogIndex = getNextWeightedIndex(_currentDialogIndex, _dialogs.length, prefs);
+    } else if (_currentDialogIndex < _dialogs.length - 1) {
       _currentDialogIndex++;
-      _currentRepeatIndex = 0;
-      _revealTranslation = false;
-      _isPaused = false;
-      _isPlaying = false;
-      _autoProceedTimer?.cancel();
-      _ttsService.stop();
-      notifyListeners();
     }
+    _currentRepeatIndex = 0;
+    _revealTranslation = false;
+    _isPaused = false;
+    _isPlaying = false;
+    _autoProceedTimer?.cancel();
+    _ttsService.stop();
+    notifyListeners();
   }
 
   /// 7. 음성 학습 자동-순환 비동기 루프 코어
-  Future<void> _runStudyLoop({required bool autoProceed, required Function onAutoProceeded}) async {
+  Future<void> _runStudyLoop({required bool autoProceed, required bool randomize, required Function onAutoProceeded}) async {
     while (_isPlaying && !_isPaused && _currentRepeatIndex < _targetRepeatCount) {
       final dialog = currentDialog;
       if (dialog == null) break;
@@ -205,9 +350,15 @@ class StudyProvider with ChangeNotifier {
 
       // 자동 진행 옵션이 ON인 경우
       if (autoProceed) {
-        _autoProceedTimer = Timer(const Duration(seconds: 3), () {
-          if (_currentDialogIndex < _dialogs.length - 1) {
-            nextDialog();
+        _autoProceedTimer = Timer(const Duration(seconds: 3), () async {
+          final prefs = await SharedPreferences.getInstance();
+          if (randomize || _currentDialogIndex < _dialogs.length - 1) {
+            _currentDialogIndex = randomize 
+                ? getNextWeightedIndex(_currentDialogIndex, _dialogs.length, prefs)
+                : _currentDialogIndex + 1;
+            _currentRepeatIndex = 0;
+            _revealTranslation = false;
+            notifyListeners();
             onAutoProceeded(); // 다음 화면에서 재생을 다시 타게 유도
           } else {
             // 끝까지 간 경우 완료 상태로 일시정지 해제

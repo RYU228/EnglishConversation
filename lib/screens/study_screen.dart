@@ -29,10 +29,80 @@ class _StudyScreenState extends State<StudyScreen> {
     
     study.startStudy(
       autoProceed: settings.autoProceed,
+      randomize: settings.randomPlay,
       onAutoProceeded: () {
         // 자동 넘어갔을 시, 다음 아이템에서도 연속으로 재생을 자동 개시하게 함
         _triggerPlay();
       }
+    );
+  }
+
+  Widget _buildHintButton(BuildContext context, int level, String label, String desc) {
+    final study = Provider.of<StudyProvider>(context);
+    final isSelected = study.hintLevel == level;
+    final theme = Theme.of(context);
+    
+    return Expanded(
+      child: InkWell(
+        onTap: () => study.setHintLevel(level),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surface,
+            border: Border.all(color: isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                desc,
+                style: TextStyle(
+                  fontSize: 8,
+                  color: isSelected ? theme.colorScheme.onPrimary.withOpacity(0.8) : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingButton(BuildContext context, int currentIndex, String statusKey, String label, Color color) {
+    final study = Provider.of<StudyProvider>(context);
+    final isSelected = study.dialogStatus[currentIndex] == statusKey;
+    
+    return Expanded(
+      child: InkWell(
+        onTap: () => study.updateDialogStatus(currentIndex, statusKey),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color : color.withOpacity(0.06),
+            border: Border.all(color: isSelected ? color : color.withOpacity(0.3)),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : color,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -207,6 +277,26 @@ class _StudyScreenState extends State<StudyScreen> {
                                           }),
                                         ),
                                         const SizedBox(height: 24),
+                                        
+                                        // 힌트보기 버튼 (처음 누르면 1단계 힌트로 진입)
+                                        ElevatedButton.icon(
+                                          onPressed: () {
+                                            study.setRevealTranslation(true);
+                                            study.setHintLevel(1);
+                                          },
+                                          icon: const Icon(Icons.remove_red_eye_rounded, size: 16),
+                                          label: const Text("힌트보기", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: theme.colorScheme.primaryContainer,
+                                            foregroundColor: theme.colorScheme.onPrimaryContainer,
+                                            elevation: 0,
+                                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 24),
                                       ],
                                     )
                                   // [공개된 상태] - 영어 대화 대본과 한글 뜻 표출
@@ -214,13 +304,50 @@ class _StudyScreenState extends State<StudyScreen> {
                                       key: const ValueKey("revealed_state"),
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
-                                        Text(
-                                          "학습 문장 대본 및 해석",
-                                          style: theme.textTheme.titleSmall?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.bold,
+                                        // 점진적 힌트 단계 선택기 영역
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: theme.colorScheme.surfaceContainer,
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
                                           ),
-                                          textAlign: TextAlign.center,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  const Text("💡 점진적 힌트 선택", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: theme.colorScheme.primaryContainer,
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      study.hintLevel == 1 ? "1단계: 한국어만" :
+                                                      study.hintLevel == 2 ? "2단계: 핵심 패턴만" :
+                                                      study.hintLevel == 3 ? "3단계: 빈칸 채우기" : "4단계: 전체 대본",
+                                                      style: TextStyle(fontSize: 10, color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                children: [
+                                                  _buildHintButton(context, 1, "1단계", "한글만"),
+                                                  const SizedBox(width: 4),
+                                                  _buildHintButton(context, 2, "2단계", "패턴만"),
+                                                  const SizedBox(width: 4),
+                                                  _buildHintButton(context, 3, "3단계", "빈칸채우기"),
+                                                  const SizedBox(width: 4),
+                                                  _buildHintButton(context, 4, "4단계", "전체공개"),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                         const SizedBox(height: 16.0),
                                         
@@ -272,15 +399,24 @@ class _StudyScreenState extends State<StudyScreen> {
                                                   ],
                                                 ),
                                                 const SizedBox(height: 8.0),
-                                                // 영어 텍스트
-                                                Text(
-                                                  currentDialog.english[idx],
-                                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
-                                                    color: theme.colorScheme.onSurface,
-                                                  ),
-                                                ),
+                                                
+                                                // 영어 텍스트 (힌트 레벨 반영)
+                                                study.hintLevel == 1
+                                                    ? Text(
+                                                        "(대본 숨김 처리됨 - 2~4단계를 선택하세요)",
+                                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                                          color: theme.colorScheme.outline,
+                                                          fontStyle: FontStyle.italic,
+                                                        ),
+                                                      )
+                                                    : Text(
+                                                        study.getHintedEnglish(currentDialog.english[idx], study.hintLevel),
+                                                        style: theme.textTheme.bodyLarge?.copyWith(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 18,
+                                                          color: theme.colorScheme.onSurface,
+                                                        ),
+                                                      ),
                                                 const SizedBox(height: 6.0),
                                                 // 한국어 번역 텍스트
                                                 Text(
@@ -315,6 +451,60 @@ class _StudyScreenState extends State<StudyScreen> {
                   ),
                 ),
 
+                // 자가평가 평가 패널 (번역/대본이 공개되었을 때만 노출)
+                if (study.revealTranslation && currentDialog != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    margin: const EdgeInsets.only(bottom: 4.0),
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3))),
+                      color: theme.colorScheme.surface,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "이 대화 기억난이도 평가 📝",
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (study.dialogStatus[currentIndex] != 'NONE')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  "등록됨",
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            _buildRatingButton(context, currentIndex, 'KNOW', '알아요 😊', Colors.teal),
+                            const SizedBox(width: 8),
+                            _buildRatingButton(context, currentIndex, 'CONFUSED', '헷갈려요 🤔', Colors.amber),
+                            const SizedBox(width: 8),
+                            _buildRatingButton(context, currentIndex, 'WRONG', '몰라요 😭', Colors.redAccent),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // 3. 하단 플레이어 제어기 위젯 마운트
                 PlayerControls(
                   isPlaying: study.isPlaying,
@@ -326,12 +516,12 @@ class _StudyScreenState extends State<StudyScreen> {
                     study.pauseStudy();
                   },
                   onPrevious: () {
-                    study.previousDialog();
+                    study.previousDialog(randomize: settings.randomPlay);
                     // 이전 대화로 갈 때, 자동 재생을 바로 개시해서 몰입감 확보
                     _triggerPlay();
                   },
                   onNext: () {
-                    study.nextDialog();
+                    study.nextDialog(randomize: settings.randomPlay);
                     // 다음 대화로 갈 때, 자동 재생을 바로 개시해서 몰입감 확보
                     _triggerPlay();
                   },

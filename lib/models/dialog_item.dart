@@ -2,10 +2,14 @@
 class DialogItem {
   final List<String> english;
   final List<String> korean;
+  final String? pattern;
+  final String? difficulty;
 
   DialogItem({
     required this.english,
     required this.korean,
+    this.pattern,
+    this.difficulty,
   });
 
   /// JSON 데이터로부터 DialogItem 객체 생성
@@ -13,6 +17,8 @@ class DialogItem {
     return DialogItem(
       english: List<String>.from(json['english'] ?? []),
       korean: List<String>.from(json['korean'] ?? []),
+      pattern: json['pattern'] as String?,
+      difficulty: json['difficulty'] as String?,
     );
   }
 
@@ -21,6 +27,8 @@ class DialogItem {
     return {
       'english': english,
       'korean': korean,
+      'pattern': pattern,
+      'difficulty': difficulty,
     };
   }
 }
