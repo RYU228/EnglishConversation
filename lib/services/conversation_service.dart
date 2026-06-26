@@ -12,6 +12,34 @@ class LocalJsonSource implements ConversationSource {
   @override
   Future<List<DialogItem>> getDialogs(String topicKey) async {
     try {
+      if (topicKey.startsWith('pattern_')) {
+        final List<String> coreTopics = ['daily', 'cafe', 'restaurant', 'shopping', 'travel', 'business'];
+        final String patternText = topicKey == 'pattern_doyouhave' ? 'do you have' :
+                             topicKey == 'pattern_couldi' ? 'could i' :
+                             topicKey == 'pattern_donthaveto' ? "don't have to" :
+                             topicKey == 'pattern_howabout' ? 'how about' :
+                             topicKey == 'pattern_lookingfor' ? 'looking for' : '';
+        
+        final List<DialogItem> matched = [];
+        for (final topic in coreTopics) {
+          try {
+            final String jsonString = await rootBundle.loadString('assets/conversations/$topic.json');
+            final Map<String, dynamic> jsonData = json.decode(jsonString);
+            final List<dynamic> dialogsJson = jsonData['dialogs'] ?? [];
+            final List<DialogItem> dialogs = dialogsJson.map((item) => DialogItem.fromJson(item)).toList();
+            for (final dialog in dialogs) {
+              final bool hasPattern = dialog.english.any((sentence) => sentence.toLowerCase().contains(patternText));
+              if (hasPattern) {
+                matched.add(dialog);
+              }
+            }
+          } catch (e) {
+            // ignore error
+          }
+        }
+        return matched;
+      }
+
       // assets/conversations/{topicKey}.json 경로에서 에셋 읽기
       final String jsonString = await rootBundle.loadString('assets/conversations/$topicKey.json');
       final Map<String, dynamic> jsonData = json.decode(jsonString);

@@ -27,6 +27,7 @@ class StudyProvider with ChangeNotifier {
   // 추가 기능 상태
   Map<int, String> _dialogStatus = {};
   int _hintLevel = 4; // 1: 한글만, 2: 패턴만, 3: 빈칸채우기, 4: 전체대본
+  double _speechRate = 1.15;
 
   Timer? _autoProceedTimer;
   bool _disposed = false;
@@ -43,6 +44,7 @@ class StudyProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   Map<int, String> get dialogStatus => _dialogStatus;
   int get hintLevel => _hintLevel;
+  double get speechRate => _speechRate;
 
   /// 현재 진행 상태를 나타내는 진행율 (0.0 ~ 1.0)
   double get progress {
@@ -64,6 +66,14 @@ class StudyProvider with ChangeNotifier {
   void setRevealTranslation(bool reveal) {
     _revealTranslation = reveal;
     notifyListeners();
+  }
+
+  Future<void> setSpeechRate(double rate) async {
+    _speechRate = rate;
+    notifyListeners();
+    await _ttsService.setSpeechRate(rate);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('speech_rate', rate);
   }
 
   /// 자가 학습 피드백 상태 업데이트
@@ -211,6 +221,7 @@ class StudyProvider with ChangeNotifier {
 
     // 로컬 저장소로부터 각 대화 상태 복원
     final prefs = await SharedPreferences.getInstance();
+    _speechRate = prefs.getDouble('speech_rate') ?? 1.15;
     for (int i = 0; i < loadedDialogs.length; i++) {
       final saved = prefs.getString('dialog_status_${_currentTopicKey}_$i');
       _dialogStatus[i] = saved ?? 'NONE';
@@ -322,8 +333,9 @@ class StudyProvider with ChangeNotifier {
       for (int i = 0; i < dialog.english.length; i++) {
         if (!_isPlaying || _isPaused) return;
 
+        final speaker = i % 2 == 0 ? 'A' : 'B';
         // 문장 TTS 재생
-        await _ttsService.speak(dialog.english[i]);
+        await _ttsService.speak(dialog.english[i], speed: _speechRate, speaker: speaker);
 
         // 문장 사이 1초 대기 (마지막 문장이 아닌 경우에만 진행)
         if (i < dialog.english.length - 1) {

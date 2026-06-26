@@ -194,6 +194,55 @@ class _StudyScreenState extends State<StudyScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8.0),
+                      
+                      // 발음 속도 조절 드롭다운
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.speed_rounded,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            "발음 속도: ",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          DropdownButton<double>(
+                            value: study.speechRate,
+                            elevation: 8,
+                            underline: Container(),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                            onChanged: (double? newValue) {
+                              if (newValue != null) {
+                                study.setSpeechRate(newValue);
+                              }
+                            },
+                            items: const [
+                              DropdownMenuItem<double>(
+                                value: 0.65,
+                                child: Text("0.65x (매우 느리게)"),
+                              ),
+                              DropdownMenuItem<double>(
+                                value: 0.85,
+                                child: Text("0.85x (부드러운 섀도잉)"),
+                              ),
+                              DropdownMenuItem<double>(
+                                value: 1.15,
+                                child: Text("1.15x (자연스러운 원어민속도)"),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -494,11 +543,11 @@ class _StudyScreenState extends State<StudyScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _buildRatingButton(context, currentIndex, 'KNOW', '알아요 😊', Colors.teal),
+                            _buildRatingButton(context, currentIndex, 'KNOW', '알아요 😊', Color(0xFF10B981)),
                             const SizedBox(width: 8),
                             _buildRatingButton(context, currentIndex, 'CONFUSED', '헷갈려요 🤔', Colors.amber),
                             const SizedBox(width: 8),
-                            _buildRatingButton(context, currentIndex, 'WRONG', '몰라요 😭', Colors.redAccent),
+                            _buildRatingButton(context, currentIndex, 'WRONG', '몰라요 😭', Color(0xFFF43F5E)),
                           ],
                         ),
                       ],

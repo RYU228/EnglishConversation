@@ -124,6 +124,90 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24.0),
+
+              // 오늘의 패턴 테마 학습 타이틀
+              Row(
+                children: [
+                  Text(
+                    "오늘의 패턴 테마 학습 💡",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      "HOT",
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12.0),
+
+              // 패턴 수평 리스트뷰
+              SizedBox(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildPatternCard(
+                      context,
+                      key: 'pattern_doyouhave',
+                      pattern: 'Do you have ~',
+                      desc: '~ 있나요?',
+                      badge: '소유/유무',
+                      color: Colors.indigo,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildPatternCard(
+                      context,
+                      key: 'pattern_couldi',
+                      pattern: 'Could I ~',
+                      desc: '~ 할 수 있을까요?',
+                      badge: '정중한 부탁',
+                      color: Colors.teal,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildPatternCard(
+                      context,
+                      key: 'pattern_donthaveto',
+                      pattern: "I don't have to ~",
+                      desc: '~ 하지 않아도 돼요',
+                      badge: '의무 해제',
+                      color: Colors.purple,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildPatternCard(
+                      context,
+                      key: 'pattern_howabout',
+                      pattern: 'How about ~',
+                      desc: '~ 는 어때요?',
+                      badge: '의견 제안',
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildPatternCard(
+                      context,
+                      key: 'pattern_lookingfor',
+                      pattern: "I'm looking for ~",
+                      desc: '~ 를 찾고 있어요',
+                      badge: '목적/탐색',
+                      color: Colors.pink,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28.0),
               
               Text(
                 "회화 학습 주제 선택",
@@ -169,6 +253,85 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20.0),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPatternCard(
+    BuildContext context, {
+    required String key,
+    required String pattern,
+    required String desc,
+    required String badge,
+    required Color color,
+  }) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () {
+        final settings = Provider.of<SettingsProvider>(context, listen: false);
+        Provider.of<StudyProvider>(context, listen: false).loadTopic(
+          key,
+          "패턴: $pattern",
+          settings.repeatCount,
+          settings.randomPlay,
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const StudyScreen()),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: 135,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [color.withOpacity(0.08), color.withOpacity(0.02)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          border: Border.all(color: color.withOpacity(0.25), width: 1.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  badge,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  pattern,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            Text(
+              desc,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

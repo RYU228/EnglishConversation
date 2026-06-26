@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:js' as js;
 
 /// TTS (Text-to-Speech) 재생을 관리하는 서비스 클래스
 class TtsService {
@@ -34,9 +38,70 @@ class TtsService {
   bool get isSpeaking => _isSpeaking;
 
   /// 단일 텍스트 음성 출력
-  Future<void> speak(String text) async {
+  Future<void> speak(String text, {double speed = 1.15, String speaker = 'A', String lang = 'en-US'}) async {
+    _isSpeaking = true;
+
+    if (kIsWeb) {
+      try {
+        final origin = Uri.base.origin;
+        final response = await http.post(
+          Uri.parse('$origin/api/tts'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'text': text,
+            'lang': lang,
+            'speaker': speaker,
+            'speed': speed,
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final base64Audio = data['audioContent'];
+          if (base64Audio != null && base64Audio.toString().isNotEmpty) {
+            js.context.callMethod('eval', ["""
+              (function() {
+                window.activeFlutterAudioPlaying = true;
+                if (window.activeFlutterAudio) {
+                  try { window.activeFlutterAudio.pause(); } catch(e){}
+                }
+                var audio = new Audio("data:audio/mp3;base64," + "${base64Audio.toString()}");
+                window.activeFlutterAudio = audio;
+                audio.onended = function() {
+                  window.activeFlutterAudioPlaying = false;
+                };
+                audio.onerror = function() {
+                  window.activeFlutterAudioPlaying = false;
+                };
+                audio.play().catch(function(err) {
+                  window.activeFlutterAudioPlaying = false;
+                });
+              })()
+            """]);
+
+            int elapsed = 0;
+            while (js.context['activeFlutterAudioPlaying'] == true && elapsed < 12000) {
+              await Future.delayed(const Duration(milliseconds: 100));
+              elapsed += 100;
+            }
+            _isSpeaking = false;
+            return;
+          }
+        }
+      } catch (e) {
+        debugPrint("[TTS API Error] Fallback to offline tts: $e");
+      }
+    }
+
+    // Fallback: Local offline TTS
+    double localRate = 0.45;
+    if (speed < 0.8) localRate = 0.35;
+    else if (speed < 1.0) localRate = 0.40;
+    else if (speed > 1.1) localRate = 0.50;
+
+    await _flutterTts.setSpeechRate(localRate);
     await _flutterTts.speak(text);
-    // 재생이 완전히 끝난 것을 대기하기 위한 간단한 폴링 (또는 CompletionHandler 대기)
+
     while (_isSpeaking) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
@@ -46,6 +111,21 @@ class TtsService {
   Future<void> stop() async {
     await _flutterTts.stop();
     _isSpeaking = false;
+    if (kIsWeb) {
+      try {
+        js.context.callMethod('eval', ["""
+          if (window.activeFlutterAudio) {
+            try {
+              window.activeFlutterAudio.pause();
+              window.activeFlutterAudio.currentTime = 0;
+            } catch(e){}
+          }
+          window.activeFlutterAudioPlaying = false;
+        """]);
+      } catch (e) {
+        // ignore
+      }
+    }
   }
 
   /// 한국말이나 언어 번용에 사용할 수 있도록 설정 전환 함수 (확장용)
@@ -55,6 +135,10 @@ class TtsService {
 
   /// 속도 조절용 함수 (확장용)
   Future<void> setSpeechRate(double rate) async {
-    await _flutterTts.setSpeechRate(rate);
+    double localRate = 0.45;
+    if (rate < 0.8) localRate = 0.35;
+    else if (rate < 1.0) localRate = 0.40;
+    else if (rate > 1.1) localRate = 0.50;
+    await _flutterTts.setSpeechRate(localRate);
   }
 }
