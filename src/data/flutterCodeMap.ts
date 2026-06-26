@@ -168,11 +168,12 @@ class TtsService {
             js.context.callMethod('eval', ["""
               (function() {
                 window.activeFlutterAudioPlaying = true;
-                if (window.activeFlutterAudio) {
-                  try { window.activeFlutterAudio.pause(); } catch(e){}
+                if (!window.activeFlutterAudio) {
+                  window.activeFlutterAudio = new Audio();
                 }
-                var audio = new Audio("data:audio/mp3;base64," + "\${base64Audio.toString()}");
-                window.activeFlutterAudio = audio;
+                var audio = window.activeFlutterAudio;
+                try { audio.pause(); } catch(e){}
+                audio.src = "data:audio/mp3;base64," + "\${base64Audio.toString()}";
                 audio.onended = function() {
                   window.activeFlutterAudioPlaying = false;
                 };
@@ -180,6 +181,7 @@ class TtsService {
                   window.activeFlutterAudioPlaying = false;
                 };
                 audio.play().catch(function(err) {
+                  console.warn("Flutter Web TTS Play blocked/failed on mobile:", err);
                   window.activeFlutterAudioPlaying = false;
                 });
               })()
@@ -213,6 +215,30 @@ class TtsService {
     }
   }
 
+  /// 모바일 웹 브라우저의 유저 제스처 정책 잠금 해제용 웜업 유틸리티
+  void unlockAudioForWeb() {
+    if (kIsWeb) {
+      try {
+        js.context.callMethod('eval', ["""
+          (function() {
+            if (!window.activeFlutterAudio) {
+              window.activeFlutterAudio = new Audio();
+            }
+            // 1-pixel tiny silent audio
+            window.activeFlutterAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
+            window.activeFlutterAudio.play().then(function() {
+              window.activeFlutterAudio.pause();
+            }).catch(function(e) {
+              console.warn("Silent audio warm-up bypassed:", e);
+            });
+          })()
+        """]);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
   /// TTS 재생 전면 일시정지 및 정지
   Future<void> stop() async {
     await _flutterTts.stop();
@@ -223,7 +249,6 @@ class TtsService {
           if (window.activeFlutterAudio) {
             try {
               window.activeFlutterAudio.pause();
-              window.activeFlutterAudio.currentTime = 0;
             } catch(e){}
           }
           window.activeFlutterAudioPlaying = false;

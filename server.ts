@@ -18,14 +18,6 @@ async function startServer() {
   // API Route: Synthesize Speech using Google Cloud Text-to-Speech API
   app.post("/api/tts", async (req, res) => {
     try {
-      const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
-      if (!apiKey) {
-        return res.status(400).json({ 
-          fallback: true,
-          error: "GOOGLE_CLOUD_API_KEY is not defined on the server. Falling back to local offline TTS." 
-        });
-      }
-
       const { text, lang, speaker, speed } = req.body;
       if (!text) {
         return res.status(400).json({ error: "Text parameter is required" });
@@ -36,6 +28,41 @@ async function startServer() {
       if (ttsCache.has(cacheKey)) {
         console.log(`[TTS] Cache Hit for: "${text.substring(0, 20)}..."`);
         return res.json({ audioContent: ttsCache.get(cacheKey) });
+      }
+
+      const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
+      if (!apiKey) {
+        // Fallback to free high-quality Google Translate TTS API to keep the app 100% functional
+        try {
+          const targetLang = lang || "en-US";
+          // Google Translate TTS works best with standard ISO codes (e.g. 'en', 'ko')
+          const shortLang = targetLang.substring(0, 2);
+          const translateTtsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=${shortLang}&client=tw-ob`;
+          
+          console.log(`[TTS] No Google Cloud API Key. Fetching Google Translate Free Fallback for: "${text.substring(0, 30)}..." Lang: ${shortLang}`);
+          
+          const response = await fetch(translateTtsUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
+          });
+          
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64Audio = Buffer.from(buffer).toString("base64");
+            ttsCache.set(cacheKey, base64Audio);
+            return res.json({ audioContent: base64Audio });
+          } else {
+            console.error(`[TTS] Google Translate Free Fallback failed with status: ${response.status}`);
+          }
+        } catch (err: any) {
+          console.error("[TTS] Google Translate Fallback exception:", err);
+        }
+
+        return res.status(400).json({ 
+          fallback: true,
+          error: "GOOGLE_CLOUD_API_KEY is not defined on the server, and free fallback failed." 
+        });
       }
 
       // Map Speaker types to high-quality authentic Neural2 Voices

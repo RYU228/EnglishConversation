@@ -27,6 +27,9 @@ class _StudyScreenState extends State<StudyScreen> {
     final study = Provider.of<StudyProvider>(context, listen: false);
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     
+    // 모바일 웹 오디오 잠금 해제
+    study.unlockAudio();
+    
     study.startStudy(
       autoProceed: settings.autoProceed,
       randomize: settings.randomPlay,
@@ -44,7 +47,10 @@ class _StudyScreenState extends State<StudyScreen> {
     
     return Expanded(
       child: InkWell(
-        onTap: () => study.setHintLevel(level),
+        onTap: () {
+          study.unlockAudio();
+          study.setHintLevel(level);
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
@@ -82,7 +88,10 @@ class _StudyScreenState extends State<StudyScreen> {
     
     return Expanded(
       child: InkWell(
-        onTap: () => study.updateDialogStatus(currentIndex, statusKey),
+        onTap: () {
+          study.unlockAudio();
+          study.updateDialogStatus(currentIndex, statusKey);
+        },
         borderRadius: BorderRadius.circular(10),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -330,6 +339,7 @@ class _StudyScreenState extends State<StudyScreen> {
                                         // 힌트보기 버튼 (처음 누르면 1단계 힌트로 진입)
                                         ElevatedButton.icon(
                                           onPressed: () {
+                                            study.unlockAudio();
                                             study.setRevealTranslation(true);
                                             study.setHintLevel(1);
                                           },
@@ -562,6 +572,7 @@ class _StudyScreenState extends State<StudyScreen> {
                   hasNext: currentIndex < totalDialogs - 1,
                   onPlay: _triggerPlay,
                   onPause: () {
+                    study.unlockAudio();
                     study.pauseStudy();
                   },
                   onPrevious: () {

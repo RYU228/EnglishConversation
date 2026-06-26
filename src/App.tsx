@@ -52,6 +52,27 @@ export default function App() {
   };
 
   const handleSelectTopic = (key: string, title: string) => {
+    // Mobile Web Browser Gesture Unlock on Topic Selection Click
+    try {
+      // 1. HTML5 Audio Unlock
+      const silentAudio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA");
+      silentAudio.play().then(() => {
+        silentAudio.pause();
+      }).catch((e) => {
+        console.warn("Silent audio unlock failed:", e);
+      });
+
+      // 2. Web SpeechSynthesis Unlock
+      if (window.speechSynthesis) {
+        const silentUtterance = new SpeechSynthesisUtterance(" ");
+        silentUtterance.volume = 0;
+        silentUtterance.rate = 1.0;
+        window.speechSynthesis.speak(silentUtterance);
+      }
+    } catch (err) {
+      console.warn("Mobile browser audio warmup failed:", err);
+    }
+
     setSelectedTopicKey(key);
     setSelectedTopicTitle(title);
     setCurrentScreen('STUDY');

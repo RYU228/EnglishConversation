@@ -84,6 +84,11 @@ class StudyProvider with ChangeNotifier {
     await prefs.setString('dialog_status_${_currentTopicKey}_$index', status);
   }
 
+  /// 모바일 웹 브라우저의 오디오 잠금을 해제하기 위한 트리거 메서드
+  void unlockAudio() {
+    _ttsService.unlockAudioForWeb();
+  }
+
   @override
   void dispose() {
     _disposed = true;

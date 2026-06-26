@@ -160,11 +160,76 @@ export default function StudyScreenSim({
   const isComponentMounted = useRef(true);
   const playStateRef = useRef({ isPlaying: false, isPaused: false, currentIndex: 0, currentRepeatIndex: 0 });
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Web Audio API refs for mobile-immune sound playing
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const activeSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  };
+
+  // Initialize single reusable Audio element and silent wake to unlock mobile browsers
+  useEffect(() => {
+    // 1-pixel tiny silent audio wav base64 to warm up the element
+    const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA");
+    activeAudioRef.current = audio;
+    
+    return () => {
+      if (activeAudioRef.current) {
+        try {
+          activeAudioRef.current.pause();
+          activeAudioRef.current.src = "";
+        } catch (e) {}
+        activeAudioRef.current = null;
+      }
+    };
+  }, []);
 
   // Sync ref values for async callbacks
   useEffect(() => {
     playStateRef.current = { isPlaying, isPaused, currentIndex, currentRepeatIndex };
   }, [isPlaying, isPaused, currentIndex, currentRepeatIndex]);
+
+  // Mobile Web User Gesture Unlock Trigger
+  const unlockAudioForMobile = () => {
+    // 1. Unlocks/Warms up reusable HTML5 Audio
+    if (activeAudioRef.current) {
+      activeAudioRef.current.play().then(() => {
+        if (activeAudioRef.current) {
+          activeAudioRef.current.pause();
+        }
+      }).catch((e) => {
+        console.warn("Mobile HTML5 Audio unlock failed:", e);
+      });
+    } else {
+      const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA");
+      activeAudioRef.current = audio;
+      audio.play().then(() => {
+        audio.pause();
+      }).catch((e) => {
+        console.warn("Mobile HTML5 Audio inline warm-up failed:", e);
+      });
+    }
+
+    // 2. Unlocks/Warms up Web SpeechSynthesis
+    if (window.speechSynthesis) {
+      try {
+        const silentUtterance = new SpeechSynthesisUtterance(" ");
+        silentUtterance.volume = 0;
+        silentUtterance.rate = 1.0;
+        window.speechSynthesis.speak(silentUtterance);
+      } catch (e) {
+        console.warn("Mobile Web SpeechSynthesis unlock failed:", e);
+      }
+    }
+  };
 
   // Handle initialization and optional randomizing
   useEffect(() => {
@@ -184,7 +249,7 @@ export default function StudyScreenSim({
     setIsPlaying(false);
     setIsPaused(false);
 
-    // Auto play on screen load
+    // Auto play on screen load (may be blocked on mobile until user taps play, which is handled gracefully)
     const timer = setTimeout(() => {
       startPlayback(items, startIndex, 0);
     }, 400);
@@ -208,11 +273,15 @@ export default function StudyScreenSim({
     if (activeAudioRef.current) {
       try {
         activeAudioRef.current.pause();
-        activeAudioRef.current.src = "";
       } catch (err) {
         console.warn("Error pausing active audio:", err);
       }
-      activeAudioRef.current = null;
+    }
+    if (activeSourceRef.current) {
+      try {
+        activeSourceRef.current.stop();
+      } catch (e) {}
+      activeSourceRef.current = null;
     }
     if (playbackTimeoutRef.current) {
       clearTimeout(playbackTimeoutRef.current);
@@ -325,18 +394,18 @@ export default function StudyScreenSim({
         }
       }, fallbackDuration);
 
-      // Stop any prior playing audio node
+      // Stop any prior playing audio node safely
       if (activeAudioRef.current) {
         try {
           activeAudioRef.current.pause();
-          activeAudioRef.current.src = "";
         } catch (e) {
           console.warn("Error releasing prior audio:", e);
         }
-        activeAudioRef.current = null;
+      } else {
+        activeAudioRef.current = new Audio();
       }
 
-      // 1. Attempt High Quality Google Cloud Neural2 backend proxy
+      // 1. Attempt High Quality Google Cloud Neural2 backend proxy (or Google Translate fallback)
       try {
         const response = await fetch("/api/tts", {
           method: "POST",
@@ -354,27 +423,89 @@ export default function StudyScreenSim({
         if (response.ok) {
           const data = await response.json();
           if (data.audioContent && isComponentMounted.current && !resolved) {
-            const audioDataUrl = `data:audio/mp3;base64,${data.audioContent}`;
-            const audio = new Audio(audioDataUrl);
-            activeAudioRef.current = audio;
+            
+            // Helper for traditional HTML5 Audio play fallback if needed
+            const playHtml5AudioFallback = async () => {
+              const audio = activeAudioRef.current || new Audio();
+              activeAudioRef.current = audio;
+              audio.src = `data:audio/mp3;base64,${data.audioContent}`;
+              
+              audio.onended = () => {
+                clearTimeout(timer);
+                if (!resolved) {
+                  resolved = true;
+                  setIsSpeakingTts(false);
+                  resolve();
+                }
+              };
 
-            audio.onended = () => {
-              clearTimeout(timer);
-              if (!resolved) {
-                resolved = true;
-                setIsSpeakingTts(false);
-                resolve();
+              audio.onerror = (err) => {
+                console.warn("HTML5 audio playback failed. Falling back to local synthesis.", err);
+                if (!resolved) {
+                  runWebSpeechSynthesisFallback(text, voiceLang, speaker, timer, resolve);
+                }
+              };
+
+              try {
+                await audio.play();
+              } catch (playErr) {
+                console.warn("HTML5 audio play blocked:", playErr);
+                // Switch back to paused state if blocked
+                setIsPlaying(false);
+                setIsPaused(true);
+                clearTimeout(timer);
+                if (!resolved) {
+                  resolved = true;
+                  setIsSpeakingTts(false);
+                  resolve();
+                }
               }
             };
 
-            audio.onerror = (err) => {
-              console.warn("Proxy audio tag load failed. Failing back to local speaker.", err);
-              if (!resolved) {
-                runWebSpeechSynthesisFallback(text, voiceLang, speaker, timer, resolve);
+            // Web Audio API playback (highly reliable on mobile browsers once unlocked)
+            try {
+              if (!audioCtxRef.current) {
+                audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
               }
-            };
+              const ctx = audioCtxRef.current;
+              
+              if (ctx.state === "suspended") {
+                await ctx.resume();
+              }
 
-            await audio.play();
+              const arrayBuffer = base64ToArrayBuffer(data.audioContent);
+              ctx.decodeAudioData(arrayBuffer, (audioBuffer) => {
+                if (!isComponentMounted.current || resolved) return;
+
+                // Stop any current playing source
+                if (activeSourceRef.current) {
+                  try { activeSourceRef.current.stop(); } catch (e) {}
+                  activeSourceRef.current = null;
+                }
+
+                const source = ctx.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(ctx.destination);
+                activeSourceRef.current = source;
+
+                source.onended = () => {
+                  clearTimeout(timer);
+                  if (!resolved) {
+                    resolved = true;
+                    setIsSpeakingTts(false);
+                    resolve();
+                  }
+                };
+
+                source.start(0);
+              }, (decodeErr) => {
+                console.warn("Web Audio decoding failed, falling back to HTML5 audio element:", decodeErr);
+                playHtml5AudioFallback();
+              });
+            } catch (webAudioErr) {
+              console.warn("Web Audio context start failed, falling back to HTML5 audio element:", webAudioErr);
+              await playHtml5AudioFallback();
+            }
             return;
           }
         }
@@ -483,6 +614,9 @@ export default function StudyScreenSim({
   };
 
   const handlePlayPause = () => {
+    // Unlocks mobile browser gesture blockers
+    unlockAudioForMobile();
+
     if (isPlaying && !isPaused) {
       // Pause
       setIsPaused(true);
@@ -503,6 +637,8 @@ export default function StudyScreenSim({
   };
 
   const handlePrev = () => {
+    unlockAudioForMobile();
+
     if (currentIndex > 0) {
       const nextIdx = currentIndex - 1;
       setCurrentIndex(nextIdx);
@@ -517,6 +653,8 @@ export default function StudyScreenSim({
   };
 
   const handleNext = () => {
+    unlockAudioForMobile();
+
     if (randomPlay || currentIndex < dialogs.length - 1) {
       const nextIdx = randomPlay ? getNextWeightedIndex(currentIndex, dialogs.length) : currentIndex + 1;
       setCurrentIndex(nextIdx);
@@ -531,6 +669,8 @@ export default function StudyScreenSim({
   };
 
   const handleReplay = () => {
+    unlockAudioForMobile();
+
     stopTtsAndTimers();
     setCurrentRepeatIndex(0);
     setRevealTranslation(false);
@@ -668,6 +808,7 @@ export default function StudyScreenSim({
                     {/* Quick reveal shortcut button */}
                     <button
                       onClick={() => {
+                        unlockAudioForMobile();
                         setRevealTranslation(true);
                         setHintLevel(1);
                       }}
@@ -701,7 +842,10 @@ export default function StudyScreenSim({
                         ].map((h) => (
                           <button
                             key={h.level}
-                            onClick={() => setHintLevel(h.level)}
+                            onClick={() => {
+                              unlockAudioForMobile();
+                              setHintLevel(h.level);
+                            }}
                             className={`py-1 rounded-lg text-[10px] font-bold transition-all border cursor-pointer flex flex-col items-center justify-center ${
                               hintLevel === h.level
                                 ? 'bg-teal-600 border-teal-600 text-white shadow-3xs scale-102'

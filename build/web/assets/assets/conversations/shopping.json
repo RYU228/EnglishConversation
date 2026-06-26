@@ -48,6 +48,126 @@
       ],
       "pattern": "What is your ~",
       "difficulty": "medium"
+    },
+    {
+      "english": [
+        "Could you show me where the electronics department is?",
+        "It's on the third floor, right next to the escalators."
+      ],
+      "korean": [
+        "가전제품 매장이 어디에 있는지 알려주실 수 있나요?",
+        "3층 에스컬레이터 바로 옆에 있습니다."
+      ],
+      "pattern": "Could you show me ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "I'm planning to buy a new television this weekend.",
+        "We are having a big clearance sale on 4K TVs right now."
+      ],
+      "korean": [
+        "이번 주말에 새 텔레비전을 살 계획이에요.",
+        "마침 지금 4K TV 대대적인 마감 세일을 진행하고 있습니다."
+      ],
+      "pattern": "I'm planning to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Do you mind if I exchange this for a different color?",
+        "Not at all, as long as the tag is still attached."
+      ],
+      "korean": [
+        "이것을 다른 색상으로 교환해도 괜찮을까요?",
+        "그럼요, 태그가 그대로 붙어 있기만 하면 됩니다."
+      ],
+      "pattern": "Do you mind if ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I can't afford to spend too much money on clothes today.",
+        "Then let's look at the clearance section. Everything is under twenty dollars."
+      ],
+      "korean": [
+        "오늘은 옷에 돈을 너무 많이 쓸 형편이 안 돼요.",
+        "그럼 상설 할인 구역을 봐요. 거긴 전부 20달러 미만이에요."
+      ],
+      "pattern": "I can't afford to ~",
+      "difficulty": "hard"
+    },
+    {
+      "english": [
+        "How long does it take to get a refund on my card?",
+        "It usually takes about three to five business days."
+      ],
+      "korean": [
+        "제 카드로 환불금이 들어오는 데 얼마나 걸릴까요?",
+        "보통 영업일 기준 3일에서 5일 정도 소요됩니다."
+      ],
+      "pattern": "How long does it take ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "Make sure to keep the receipt in case you change your mind.",
+        "Good point. I'll put it safely in my wallet."
+      ],
+      "korean": [
+        "마음이 바뀔 수도 있으니 영수증을 반드시 보관해 두세요.",
+        "좋은 지적이에요. 지갑에 안전하게 넣어둘게요."
+      ],
+      "pattern": "Make sure to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I think you should go with the leather jacket. It fits you perfectly.",
+        "Really? Okay, I'll take this one then."
+      ],
+      "korean": [
+        "제 생각엔 가죽 재킷으로 하시는 게 좋겠어요. 당신한테 딱 맞네요.",
+        "정말요? 좋아요, 그럼 이걸로 살게요."
+      ],
+      "pattern": "I think you should ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Don't forget to apply the discount coupon at the checkout counter.",
+        "Oh, thanks for reminding me. I completely forgot about it."
+      ],
+      "korean": [
+        "계산대에서 할인 쿠폰 적용하는 거 잊지 마세요.",
+        "아, 알려줘서 고마워요. 완전히 잊고 있었네요."
+      ],
+      "pattern": "Don't forget to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "We are running out of stock for this particular model.",
+        "Can I place an order and have it delivered to my house?"
+      ],
+      "korean": [
+        "이 특정 모델은 재고가 거의 바닥나 가고 있습니다.",
+        "주문을 해놓고 집으로 배송받을 수 있을까요?"
+      ],
+      "pattern": "We are running out of ~",
+      "difficulty": "hard"
+    },
+    {
+      "english": [
+        "It's up to you to choose between the 55-inch and 65-inch TV.",
+        "I'd rather go with the larger one for the living room."
+      ],
+      "korean": [
+        "55인치와 65인치 TV 중 어느 것을 고를지는 당신의 결정에 달렸습니다.",
+        "거실용이니까 차라리 더 큰 것으로 하겠어요."
+      ],
+      "pattern": "It's up to you to ~",
+      "difficulty": "hard"
     }
   ]
 }

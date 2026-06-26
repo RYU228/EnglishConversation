@@ -233,6 +233,9 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       final settings = Provider.of<SettingsProvider>(context, listen: false);
                       
+                      // 모바일 웹 브라우저 오디오 언락 수행
+                      Provider.of<StudyProvider>(context, listen: false).unlockAudio();
+
                       // StudyProvider 초기 가동 설정 세팅하며 로드
                       Provider.of<StudyProvider>(context, listen: false).loadTopic(
                         topic["key"],
@@ -270,6 +273,9 @@ class HomeScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         final settings = Provider.of<SettingsProvider>(context, listen: false);
+        // 모바일 웹 브라우저 오디오 언락 수행
+        Provider.of<StudyProvider>(context, listen: false).unlockAudio();
+
         Provider.of<StudyProvider>(context, listen: false).loadTopic(
           key,
           "패턴: $pattern",
