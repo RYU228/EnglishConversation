@@ -175,36 +175,6 @@ class _StudyScreenState extends State<StudyScreen> {
                       ),
                       const SizedBox(height: 12.0),
                       
-                      // 반복 상태 휠(칩) 모양 라벨칩
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ChoiceChip(
-                            label: Text(
-                              "청취 반복 상태: ${study.currentRepeatIndex} / ${study.targetRepeatCount} 회 완료",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: study.currentRepeatIndex >= study.targetRepeatCount
-                                    ? theme.colorScheme.onPrimary
-                                    : theme.colorScheme.onPrimaryContainer
-                              ),
-                            ),
-                            selected: study.currentRepeatIndex >= study.targetRepeatCount,
-                            selectedColor: theme.colorScheme.primary,
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            onSelected: (_) {},
-                            avatar: Icon(
-                              Icons.replay_circle_filled_rounded,
-                              size: 18,
-                              color: study.currentRepeatIndex >= study.targetRepeatCount
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8.0),
-                      
                       // 발음 속도 조절 드롭다운
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -243,6 +213,10 @@ class _StudyScreenState extends State<StudyScreen> {
                               DropdownMenuItem<double>(
                                 value: 0.85,
                                 child: Text("0.85x (부드러운 섀도잉)"),
+                              ),
+                              DropdownMenuItem<double>(
+                                value: 1.0,
+                                child: Text("1.00x (보통 속도)"),
                               ),
                               DropdownMenuItem<double>(
                                 value: 1.15,

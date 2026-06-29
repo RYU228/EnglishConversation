@@ -719,15 +719,6 @@ export default function StudyScreenSim({
 
         {/* ChoiceChip Repeat Indicators & Speed Controller */}
         <div className="flex flex-col items-center gap-1.5 mt-1">
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-            currentRepeatIndex >= targetRepeatCount
-              ? 'bg-teal-600 text-white shadow-2xs'
-              : 'bg-teal-55 border border-teal-100 text-teal-700'
-          }`}>
-            <Volume2 size={13} className={currentRepeatIndex < targetRepeatCount && isSpeakingTts ? 'animate-pulse' : ''} />
-            <span>청취 반복: {currentRepeatIndex} / {targetRepeatCount} 회 완료</span>
-          </div>
-
           <div className="flex items-center gap-1.5 bg-slate-100/80 border border-slate-200/40 rounded-full px-3 py-1 text-[11px] font-bold text-slate-600 shadow-3xs">
             <span className="text-slate-400">발음 속도:</span>
             <select
@@ -952,23 +943,23 @@ export default function StudyScreenSim({
       </div>
 
       {/* 3. Bottom Player Controller Panel */}
-      <div className="bg-white border-t border-slate-100 p-5 shrink-0 safe-bottom">
+      <div className="bg-white border-t border-slate-100 px-5 py-3 shrink-0 safe-bottom">
         <div className="flex items-center justify-evenly max-w-sm mx-auto">
           {/* Replay current button */}
           <button
             onClick={handleReplay}
-            className="p-3 bg-slate-100 text-slate-600 border border-slate-200 rounded-full hover:bg-slate-150 active:bg-slate-200 transition-all cursor-pointer shadow-2xs"
+            className="p-2.5 bg-slate-100 text-slate-600 border border-slate-200 rounded-full hover:bg-slate-150 active:bg-slate-200 transition-all cursor-pointer shadow-2xs"
             title="처음부터 대화 다시듣기"
             id="btn-action-replay"
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={16} />
           </button>
 
           {/* Previous Arrow Button */}
           <button
             onClick={handlePrev}
             disabled={currentIndex === 0}
-            className={`p-3.5 border rounded-full transition-all cursor-pointer shadow-2xs ${
+            className={`p-2.5 border rounded-full transition-all cursor-pointer shadow-2xs ${
               currentIndex === 0
                 ? 'bg-slate-50 border-slate-100 text-slate-300 pointer-events-none'
                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:bg-slate-100'
@@ -976,13 +967,13 @@ export default function StudyScreenSim({
             title="이전 대화"
             id="btn-action-prev"
           >
-            <SkipBack size={22} />
+            <SkipBack size={18} />
           </button>
 
           {/* Core Big Play / Pause FAB */}
           <button
             onClick={handlePlayPause}
-            className={`w-18 h-18 rounded-full flex items-center justify-center shadow-md transition-all scale-105 active:scale-95 cursor-pointer text-white ${
+            className={`w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-all scale-105 active:scale-95 cursor-pointer text-white ${
               isPlaying && !isPaused
                 ? 'bg-amber-600 hover:bg-amber-700 ring-4 ring-amber-550/20'
                 : 'bg-teal-600 hover:bg-teal-700 ring-4 ring-teal-550/20'
@@ -990,14 +981,14 @@ export default function StudyScreenSim({
             title={isPlaying && !isPaused ? '일시정지' : '재생'}
             id="btn-action-play-pause"
           >
-            {isPlaying && !isPaused ? <Pause size={28} /> : <Play size={28} className="translate-x-0.5" />}
+            {isPlaying && !isPaused ? <Pause size={22} /> : <Play size={22} className="translate-x-0.5" />}
           </button>
 
           {/* Next Arrow Button */}
           <button
             onClick={handleNext}
             disabled={!randomPlay && currentIndex === dialogs.length - 1}
-            className={`p-3.5 border rounded-full transition-all cursor-pointer shadow-2xs ${
+            className={`p-2.5 border rounded-full transition-all cursor-pointer shadow-2xs ${
               (!randomPlay && currentIndex === dialogs.length - 1)
                 ? 'bg-slate-50 border-slate-100 text-slate-300 pointer-events-none'
                 : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 active:bg-slate-100'
@@ -1005,23 +996,23 @@ export default function StudyScreenSim({
             title="다음 대화"
             id="btn-action-next"
           >
-            <SkipForward size={22} />
+            <SkipForward size={18} />
           </button>
 
           {/* Status speaker layout */}
           <div
-            className={`p-3 border rounded-full transition-all ${
+            className={`p-2.5 border rounded-full transition-all ${
               isPlaying && !isPaused
                 ? 'bg-teal-50 border-teal-100 text-teal-600 animate-pulse'
                 : 'bg-slate-100 border-slate-200 text-slate-400'
             }`}
             title="스피커 상태"
           >
-            <Volume2 size={18} />
+            <Volume2 size={16} />
           </div>
         </div>
 
-        <div className="text-center mt-3 text-[10px] font-bold text-slate-400 tracking-wide uppercase">
+        <div className="text-center mt-2 text-[10px] font-bold text-slate-400 tracking-wide uppercase">
           {isPlaying && !isPaused ? '🎧 원어민 음성 재생 및 암기 반복 학습 중...' : '⏸️ 재생 일시정지됨. 조작 대기'}
         </div>
       </div>

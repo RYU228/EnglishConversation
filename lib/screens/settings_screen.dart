@@ -3,8 +3,28 @@ import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 
 /// 학습 환경 옵션을 정의하는 설정 화면 (M3 컴포넌트 적용 및 데이터 영구 저장 지원)
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late TextEditingController _apiKeyController;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    _apiKeyController = TextEditingController(text: settings.googleTtsApiKey);
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +149,85 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 16.0),
+
+          // 3. 구글 Cloud TTS API 키 설정 카드
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.vpn_key_rounded, color: theme.colorScheme.primary, size: 20),
+                      const SizedBox(width: 8.0),
+                      Text(
+                        "Google Cloud TTS API 키",
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8.0),
+                  Text(
+                    "서버가 필요 없는 고품질 Neural2 영어 발음을 안정적으로 재생하기 위해 본인의 API 키를 입력할 수 있습니다. 비어있을 경우 기본 공용 키로 자동 구동됩니다.",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          obscureText: true,
+                          controller: _apiKeyController,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            labelText: "Google Cloud API Key (선택)",
+                            hintText: "AIzaSy...",
+                            prefixIcon: const Icon(Icons.password_rounded),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8.0),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14.0),
+                        ),
+                        onPressed: () {
+                          settings.setGoogleTtsApiKey(_apiKeyController.text.trim());
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("API 키가 안전하게 저장되었습니다!"),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: const Text("저장"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 24.0),
 
-          // 3. 안내 정보 푸터
+          // 4. 안내 정보 푸터
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Text(

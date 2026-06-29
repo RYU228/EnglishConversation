@@ -30,7 +30,7 @@ class PlayerControls extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.only(
@@ -76,7 +76,7 @@ class PlayerControls extends StatelessWidget {
               ),
 
               // 3. 중앙 재생/일시정지 메인 액션 버튼 (눈에 띔)
-              FloatingActionButton.large(
+              FloatingActionButton(
                 elevation: 2,
                 backgroundColor: theme.colorScheme.primaryContainer,
                 foregroundColor: theme.colorScheme.onPrimaryContainer,
@@ -86,7 +86,7 @@ class PlayerControls extends StatelessWidget {
                   isPlaying && !isPaused
                       ? Icons.pause_rounded
                       : Icons.play_arrow_rounded,
-                  size: 40,
+                  size: 32,
                 ),
               ),
 

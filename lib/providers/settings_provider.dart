@@ -6,10 +6,12 @@ class SettingsProvider with ChangeNotifier {
   static const String keyRepeatCount = "repeat_count";
   static const String keyAutoProceed = "auto_proceed";
   static const String keyRandomPlay = "random_play";
+  static const String keyGoogleTtsApiKey = "google_tts_api_key";
 
   int _repeatCount = 3; // 기본값 3회 (범위: 1~20)
   bool _autoProceed = false; // 자동 진행 여부
   bool _randomPlay = false; // 랜덤 재생 여부
+  String _googleTtsApiKey = ""; // 구글 TTS API 키
 
   SettingsProvider() {
     _loadSettings();
@@ -19,6 +21,7 @@ class SettingsProvider with ChangeNotifier {
   int get repeatCount => _repeatCount;
   bool get autoProceed => _autoProceed;
   bool get randomPlay => _randomPlay;
+  String get googleTtsApiKey => _googleTtsApiKey;
 
   /// SharedPreferences에서 설정 로드 및 적용
   Future<void> _loadSettings() async {
@@ -26,6 +29,7 @@ class SettingsProvider with ChangeNotifier {
     _repeatCount = prefs.getInt(keyRepeatCount) ?? 3;
     _autoProceed = prefs.getBool(keyAutoProceed) ?? false;
     _randomPlay = prefs.getBool(keyRandomPlay) ?? false;
+    _googleTtsApiKey = prefs.getString(keyGoogleTtsApiKey) ?? "";
     notifyListeners();
   }
 
@@ -52,5 +56,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(keyRandomPlay, enabled);
+  }
+
+  /// 구글 Cloud TTS API 키 설정 변경 및 저장
+  Future<void> setGoogleTtsApiKey(String apiKey) async {
+    _googleTtsApiKey = apiKey;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(keyGoogleTtsApiKey, apiKey);
   }
 }

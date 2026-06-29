@@ -578,10 +578,12 @@ class SettingsProvider with ChangeNotifier {
   static const String keyRepeatCount = "repeat_count";
   static const String keyAutoProceed = "auto_proceed";
   static const String keyRandomPlay = "random_play";
+  static const String keyGoogleTtsApiKey = "google_tts_api_key";
 
   int _repeatCount = 3;
   bool _autoProceed = false;
   bool _randomPlay = false;
+  String _googleTtsApiKey = "";
 
   SettingsProvider() {
     _loadSettings();
@@ -590,12 +592,14 @@ class SettingsProvider with ChangeNotifier {
   int get repeatCount => _repeatCount;
   bool get autoProceed => _autoProceed;
   bool get randomPlay => _randomPlay;
+  String get googleTtsApiKey => _googleTtsApiKey;
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     _repeatCount = prefs.getInt(keyRepeatCount) ?? 3;
     _autoProceed = prefs.getBool(keyAutoProceed) ?? false;
     _randomPlay = prefs.getBool(keyRandomPlay) ?? false;
+    _googleTtsApiKey = prefs.getString(keyGoogleTtsApiKey) ?? "";
     notifyListeners();
   }
 
@@ -619,6 +623,13 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(keyRandomPlay, enabled);
+  }
+
+  Future<void> setGoogleTtsApiKey(String apiKey) async {
+    _googleTtsApiKey = apiKey;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(keyGoogleTtsApiKey, apiKey);
   }
 }`
   },
@@ -1104,14 +1115,14 @@ class PlayerControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
       color: theme.colorScheme.surface,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton.filledTonal(onPressed: onReplay, icon: const Icon(Icons.replay_rounded)),
           IconButton.outlined(onPressed: hasPrevious ? onPrevious : null, icon: const Icon(Icons.skip_previous_rounded)),
-          FloatingActionButton.large(
+          FloatingActionButton(
             onPressed: isPlaying && !isPaused ? onPause : onPlay,
             child: Icon(isPlaying && !isPaused ? Icons.pause_rounded : Icons.play_arrow_rounded),
           ),
@@ -1473,8 +1484,28 @@ class HomeScreen extends StatelessWidget {
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  late TextEditingController _apiKeyController;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    _apiKeyController = TextEditingController(text: settings.googleTtsApiKey);
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1503,6 +1534,43 @@ class SettingsScreen extends StatelessWidget {
             title: const Text("대화 순서 랜덤 재생"),
             value: settings.randomPlay,
             onChanged: (v) => settings.setRandomPlay(v),
+          ),
+          const Divider(),
+          const SizedBox(height: 12.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Google Cloud TTS API Key (선택)", style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8.0),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        obscureText: true,
+                        controller: _apiKeyController,
+                        decoration: const InputDecoration(
+                          hintText: "AIzaSy...",
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8.0),
+                    ElevatedButton(
+                      onPressed: () {
+                        settings.setGoogleTtsApiKey(_apiKeyController.text.trim());
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("API 키가 안전하게 저장되었습니다!")),
+                        );
+                      },
+                      child: const Text("저장"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1681,36 +1749,6 @@ class _StudyScreenState extends State<StudyScreen> {
                       ),
                       const SizedBox(height: 12.0),
                       
-                      // 반복 상태 휠(칩) 모양 라벨칩
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ChoiceChip(
-                            label: Text(
-                              "청취 반복 상태: \${study.currentRepeatIndex} / \${study.targetRepeatCount} 회 완료",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: study.currentRepeatIndex >= study.targetRepeatCount
-                                    ? theme.colorScheme.onPrimary
-                                    : theme.colorScheme.onPrimaryContainer
-                              ),
-                            ),
-                            selected: study.currentRepeatIndex >= study.targetRepeatCount,
-                            selectedColor: theme.colorScheme.primary,
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            onSelected: (_) {},
-                            avatar: Icon(
-                              Icons.replay_circle_filled_rounded,
-                              size: 18,
-                              color: study.currentRepeatIndex >= study.targetRepeatCount
-                                  ? theme.colorScheme.onPrimary
-                                  : theme.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8.0),
-                      
                       // 발음 속도 조절 드롭다운
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1749,6 +1787,10 @@ class _StudyScreenState extends State<StudyScreen> {
                               DropdownMenuItem<double>(
                                 value: 0.85,
                                 child: Text("0.85x (부드러운 섀도잉)"),
+                              ),
+                              DropdownMenuItem<double>(
+                                value: 1.0,
+                                child: Text("1.00x (보통 속도)"),
                               ),
                               DropdownMenuItem<double>(
                                 value: 1.15,

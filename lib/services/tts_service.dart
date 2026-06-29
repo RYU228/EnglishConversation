@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
 
@@ -188,8 +189,13 @@ class TtsService {
       // speakingRate: 0.25 ~ 4.0 (Google Cloud TTS 스펙)
       final double speakingRate = speed.clamp(0.25, 4.0);
 
+      // SharedPreferences에서 저장된 사용자 지정 API 키 읽기
+      final prefs = await SharedPreferences.getInstance();
+      final userKey = prefs.getString('google_tts_api_key') ?? '';
+      final activeKey = userKey.trim().isNotEmpty ? userKey.trim() : _kGoogleTtsApiKey;
+
       final uri = Uri.parse(
-        'https://texttospeech.googleapis.com/v1/text:synthesize?key=$_kGoogleTtsApiKey',
+        'https://texttospeech.googleapis.com/v1/text:synthesize?key=$activeKey',
       );
 
       final body = jsonEncode({

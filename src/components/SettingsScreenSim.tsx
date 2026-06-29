@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, RefreshCw, Zap, Shuffle } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, RefreshCw, Zap, Shuffle, Key } from 'lucide-react';
 
 interface SettingsScreenSimProps {
   repeatCount: number;
@@ -20,6 +20,15 @@ export default function SettingsScreenSim({
   setRandomPlay,
   onBack,
 }: SettingsScreenSimProps) {
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('google_tts_api_key') || '');
+  const [savedMessage, setSavedMessage] = useState(false);
+
+  const handleSaveApiKey = () => {
+    localStorage.setItem('google_tts_api_key', apiKey.trim());
+    setSavedMessage(true);
+    setTimeout(() => setSavedMessage(false), 2000);
+  };
+
   return (
     <div className="flex flex-col h-full bg-slate-50 overflow-hidden font-sans select-none">
       {/* AppBar */}
@@ -129,6 +138,39 @@ export default function SettingsScreenSim({
               />
             </button>
           </div>
+        </div>
+
+        {/* Card 3: Google Cloud TTS API Key */}
+        <div className="p-4 bg-white rounded-2xl border border-slate-150 shadow-2xs space-y-3">
+          <div className="flex items-center gap-2">
+            <Key size={18} className="text-teal-600" />
+            <h3 className="font-bold text-sm text-slate-800">Google Cloud TTS API 키</h3>
+          </div>
+          
+          <p className="text-xs text-slate-500 leading-relaxed font-normal">
+            고품질 Neural2 영어 발음을 더 안정적으로 무제한 재생하기 위해 본인의 API 키를 등록할 수 있습니다. 입력하지 않을 시 기본 공용 키로 자동 구동됩니다.
+          </p>
+
+          <div className="flex gap-2">
+            <input
+              type="password"
+              placeholder="AIzaSy... (선택)"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="flex-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs outline-none focus:border-teal-600 font-mono"
+            />
+            <button
+              onClick={handleSaveApiKey}
+              className="px-4 py-1.5 bg-teal-600 text-white text-xs font-bold rounded-lg hover:bg-teal-700 active:scale-95 transition-all cursor-pointer shadow-3xs"
+            >
+              저장
+            </button>
+          </div>
+          {savedMessage && (
+            <p className="text-[10px] text-emerald-600 font-bold animate-pulse">
+              ✓ API 키가 웹 브라우저 내에 안전하게 저장되었습니다!
+            </p>
+          )}
         </div>
 
         {/* SharedPreferences simulation footnote */}
