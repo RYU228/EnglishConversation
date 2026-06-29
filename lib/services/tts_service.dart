@@ -9,6 +9,7 @@ import 'dart:js' as js;
 class TtsService {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isSpeaking = false;
+  static bool _apiFailedOrUnavailable = false; // Shared flag to bypass server-side TTS on static hosting
 
   TtsService() {
     _initTts();
@@ -42,56 +43,70 @@ class TtsService {
     _isSpeaking = true;
 
     if (kIsWeb) {
-      try {
-        final origin = Uri.base.origin;
-        final response = await http.post(
-          Uri.parse('$origin/api/tts'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'text': text,
-            'lang': lang,
-            'speaker': speaker,
-            'speed': speed,
-          }),
-        );
+      final origin = Uri.base.origin;
+      final isStaticHosting = origin.contains('github.io') || 
+                              origin.contains('gitee.io') || 
+                              origin.contains('vercel.app') || 
+                              origin.contains('pages.dev');
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          final base64Audio = data['audioContent'];
-          if (base64Audio != null && base64Audio.toString().isNotEmpty) {
-            js.context.callMethod('eval', ["""
-              (function() {
-                window.activeFlutterAudioPlaying = true;
-                if (!window.activeFlutterAudio) {
-                  window.activeFlutterAudio = new Audio();
-                }
-                var audio = window.activeFlutterAudio;
-                try { audio.pause(); } catch(e){}
-                audio.src = "data:audio/mp3;base64," + "${base64Audio.toString()}";
-                audio.onended = function() {
-                  window.activeFlutterAudioPlaying = false;
-                };
-                audio.onerror = function() {
-                  window.activeFlutterAudioPlaying = false;
-                };
-                audio.play().catch(function(err) {
-                  console.warn("Flutter Web TTS Play blocked/failed on mobile:", err);
-                  window.activeFlutterAudioPlaying = false;
-                });
-              })()
-            """]);
+      if (!isStaticHosting && !_apiFailedOrUnavailable) {
+        try {
+          final response = await http.post(
+            Uri.parse('$origin/api/tts'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'text': text,
+              'lang': lang,
+              'speaker': speaker,
+              'speed': speed,
+            }),
+          ).timeout(const Duration(milliseconds: 1500));
 
-            int elapsed = 0;
-            while (js.context['activeFlutterAudioPlaying'] == true && elapsed < 12000) {
-              await Future.delayed(const Duration(milliseconds: 100));
-              elapsed += 100;
+          if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final base64Audio = data['audioContent'];
+            if (base64Audio != null && base64Audio.toString().isNotEmpty) {
+              js.context.callMethod('eval', ["""
+                (function() {
+                  window.activeFlutterAudioPlaying = true;
+                  if (!window.activeFlutterAudio) {
+                    window.activeFlutterAudio = new Audio();
+                  }
+                  var audio = window.activeFlutterAudio;
+                  try { audio.pause(); } catch(e){}
+                  audio.src = "data:audio/mp3;base64," + "${base64Audio.toString()}";
+                  audio.onended = function() {
+                    window.activeFlutterAudioPlaying = false;
+                  };
+                  audio.onerror = function() {
+                    window.activeFlutterAudioPlaying = false;
+                  };
+                  audio.play().catch(function(err) {
+                    console.warn("Flutter Web TTS Play blocked/failed on mobile:", err);
+                    window.activeFlutterAudioPlaying = false;
+                  });
+                })()
+              """]);
+
+              int elapsed = 0;
+              while (js.context['activeFlutterAudioPlaying'] == true && elapsed < 12000) {
+                await Future.delayed(const Duration(milliseconds: 100));
+                elapsed += 100;
+              }
+              _isSpeaking = false;
+              return;
+            } else {
+              _apiFailedOrUnavailable = true;
             }
-            _isSpeaking = false;
-            return;
+          } else {
+            _apiFailedOrUnavailable = true;
           }
+        } catch (e) {
+          debugPrint("[TTS API Error] Fallback to offline tts: $e");
+          _apiFailedOrUnavailable = true;
         }
-      } catch (e) {
-        debugPrint("[TTS API Error] Fallback to offline tts: $e");
+      } else {
+        _apiFailedOrUnavailable = true;
       }
     }
 
@@ -102,6 +117,7 @@ class TtsService {
     else if (speed > 1.1) localRate = 0.50;
 
     await _flutterTts.setSpeechRate(localRate);
+    await _flutterTts.setLanguage(lang);
     await _flutterTts.speak(text);
 
     while (_isSpeaking) {
@@ -115,16 +131,28 @@ class TtsService {
       try {
         js.context.callMethod('eval', ["""
           (function() {
+            // 1. HTML5 Audio Unlock
             if (!window.activeFlutterAudio) {
               window.activeFlutterAudio = new Audio();
             }
-            // 1-pixel tiny silent audio
             window.activeFlutterAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAAA";
             window.activeFlutterAudio.play().then(function() {
               window.activeFlutterAudio.pause();
             }).catch(function(e) {
               console.warn("Silent audio warm-up bypassed:", e);
             });
+
+            // 2. Web SpeechSynthesis Browser Unlock (Crucial for window.speechSynthesis fallback)
+            if (window.speechSynthesis) {
+              try {
+                var silentUtterance = new SpeechSynthesisUtterance(" ");
+                silentUtterance.volume = 0;
+                silentUtterance.rate = 1.0;
+                window.speechSynthesis.speak(silentUtterance);
+              } catch(synthErr) {
+                console.warn("Silent SpeechSynthesis warm-up error:", synthErr);
+              }
+            }
           })()
         """]);
       } catch (e) {
