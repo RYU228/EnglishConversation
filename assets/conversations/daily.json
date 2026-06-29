@@ -11,19 +11,6 @@
         "꽤 바빴지만 다 괜찮아요. 당신은요?"
       ],
       "pattern": "How have you been ~",
-      "difficulty": "medium"{
-  "title": "일상 회화",
-  "dialogs": [
-    {
-      "english": [
-        "How have you been lately?",
-        "I've been quite busy, but everything is good. How about you?"
-      ],
-      "korean": [
-        "요즘 어떻게 지내셨어요?",
-        "꽤 바빴지만 다 괜찮아요. 당신은요?"
-      ],
-      "pattern": "How have you been ~",
       "difficulty": "medium"
     },
     {
@@ -181,45 +168,6 @@
       ],
       "pattern": "It's no use ~ing",
       "difficulty": "hard"
-    }
-  ]
-}
-    },
-    {
-      "english": [
-        "What are your plans for this weekend?",
-        "I think I'm just going to relax at home and watch some movies."
-      ],
-      "korean": [
-        "이번 주말에 무슨 계획 있어요?",
-        "그냥 집에서 쉬면서 영화나 볼까 해요."
-      ],
-      "pattern": "What are your plans ~",
-      "difficulty": "easy"
-    },
-    {
-      "english": [
-        "It's really nice weather today, isn't it?",
-        "Yes, it's perfect for a walk in the park! Let's go together."
-      ],
-      "korean": [
-        "오늘 날씨 정말 좋네요, 그렇지 않나요?",
-        "네, 공원 산책하기에 딱 좋은 날씨예요! 같이 가요."
-      ],
-      "pattern": "It's really ~",
-      "difficulty": "easy"
-    },
-    {
-      "english": [
-        "Did you have a good lunch?",
-        "Yes, I went to that new pasta place. It was amazing!"
-      ],
-      "korean": [
-        "점심 맛있게 먹었어요?",
-        "네, 그 새로 생긴 파스타 가게에 갔었는데 정말 맛있었어요!"
-      ],
-      "pattern": "Did you have ~",
-      "difficulty": "easy"
     }
   ]
 }
