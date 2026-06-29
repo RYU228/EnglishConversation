@@ -553,11 +553,11 @@ class _StudyScreenState extends State<StudyScreen> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _buildRatingButton(context, currentIndex, 'KNOW', '알아요 😊', Color(0xFF10B981)),
+                            _buildRatingButton(context, currentIndex, 'KNOW', '알아요 😊', const Color(0xFF10B981)),
                             const SizedBox(width: 8),
                             _buildRatingButton(context, currentIndex, 'CONFUSED', '헷갈려요 🤔', Colors.amber),
                             const SizedBox(width: 8),
-                            _buildRatingButton(context, currentIndex, 'WRONG', '몰라요 😭', Color(0xFFF43F5E)),
+                            _buildRatingButton(context, currentIndex, 'WRONG', '몰라요 😭', const Color(0xFFF43F5E)),
                           ],
                         ),
                       ],

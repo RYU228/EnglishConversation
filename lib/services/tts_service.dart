@@ -110,7 +110,66 @@ class TtsService {
       }
     }
 
-    // Fallback: Local offline TTS
+    // Fallback: Local offline TTS (For Web, we use custom JS Web Speech API. For Native, we use flutter_tts)
+    if (kIsWeb) {
+      try {
+        js.context.callMethod('eval', ["""
+          (function() {
+            if (!window.speechSynthesis) {
+              window.activeFlutterAudioPlaying = false;
+              return;
+            }
+            window.activeFlutterAudioPlaying = true;
+            window.speechSynthesis.cancel(); // Cancel any ongoing speech
+            
+            var cleanText = "${text.replaceAll('"', '\\"').replaceAll('\n', ' ')}";
+            var utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = "${lang}";
+            
+            var rate = ${speed};
+            if (rate < 0.5) rate = 0.5;
+            if (rate > 2.0) rate = 2.0;
+            utterance.rate = rate;
+
+            // Search for optimal high-quality native system voice
+            var voices = window.speechSynthesis.getVoices();
+            var targetLang = "${lang}".toLowerCase();
+            for (var i = 0; i < voices.length; i++) {
+              var voice = voices[i];
+              var voiceLang = voice.lang.toLowerCase();
+              if (voiceLang === targetLang || voiceLang.replace('_', '-') === targetLang) {
+                if (voice.name.indexOf('Google') > -1 || voice.name.indexOf('Siri') > -1 || voice.name.indexOf('Natural') > -1) {
+                  utterance.voice = voice;
+                  break;
+                }
+              }
+            }
+
+            utterance.onend = function() {
+              window.activeFlutterAudioPlaying = false;
+            };
+            utterance.onerror = function(e) {
+              console.warn("Local Web SpeechSynthesis playback failed:", e);
+              window.activeFlutterAudioPlaying = false;
+            };
+
+            window.speechSynthesis.speak(utterance);
+          })()
+        """]);
+
+        int elapsed = 0;
+        while (js.context['activeFlutterAudioPlaying'] == true && elapsed < 12000) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          elapsed += 100;
+        }
+        _isSpeaking = false;
+        return;
+      } catch (e) {
+        debugPrint("[Web Speech Fallback Exception] $e");
+      }
+    }
+
+    // Native app fallback (Android/iOS)
     double localRate = 0.45;
     if (speed < 0.8) localRate = 0.35;
     else if (speed < 1.0) localRate = 0.40;
