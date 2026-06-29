@@ -48,6 +48,126 @@
       ],
       "pattern": "Is there ~",
       "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Could you tell me how to get to the museum from here?",
+        "You can take bus number 102. The bus stop is right across the street."
+      ],
+      "korean": [
+        "여기서 박물관까지 어떻게 가는지 말씀해 주시겠어요?",
+        "102번 버스를 타시면 됩니다. 버스 정류장은 길 바로 건너편에 있어요."
+      ],
+      "pattern": "Could you tell me how ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I'm planning to rent a car for our trip tomorrow.",
+        "Make sure to bring your international driving permit."
+      ],
+      "korean": [
+        "내일 우리 여행을 위해 차를 렌트할 계획이에요.",
+        "국제운전면허증을 반드시 챙기도록 하세요."
+      ],
+      "pattern": "I'm planning to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Do you mind if I leave my luggage here until three PM?",
+        "Not at all. We will keep it safe in the storage room."
+      ],
+      "korean": [
+        "오후 3시까지 제 짐을 여기 보관해도 괜찮을까요?",
+        "그럼요. 보관실에 안전하게 보관해 두겠습니다."
+      ],
+      "pattern": "Do you mind if ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I can't make it to the airport on time if the traffic is this bad.",
+        "Don't worry. Taking the subway is much faster at this hour."
+      ],
+      "korean": [
+        "교통 체증이 이 정도로 심하면 공항에 제시간에 도착하지 못할 것 같아요.",
+        "걱정 마세요. 이 시간대에는 지하철을 타는 게 훨씬 빠릅니다."
+      ],
+      "pattern": "I can't make it to ~",
+      "difficulty": "hard"
+    },
+    {
+      "english": [
+        "How long does it take to fly from Seoul to Jeju Island?",
+        "It takes just about an hour by plane."
+      ],
+      "korean": [
+        "서울에서 제주도까지 비행기로 얼마나 걸리나요?",
+        "비행기로 딱 한 시간 정도 소요됩니다."
+      ],
+      "pattern": "How long does it take ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "Make sure to book the palace tickets online in advance.",
+        "Thanks for the tip. I'll do that right away."
+      ],
+      "korean": [
+        "궁전 입장권은 사전에 온라인으로 꼭 예매하세요.",
+        "팁 고마워요. 지금 바로 예약할게요."
+      ],
+      "pattern": "Make sure to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "I think we need to double-check our hotel reservation.",
+        "Good idea. I'll call them to confirm if they have our names."
+      ],
+      "korean": [
+        "우리 호텔 예약을 다시 한번 확인해 봐야 할 것 같아요.",
+        "좋은 생각이에요. 우리 이름으로 예약이 잘 되어 있는지 전화해 볼게요."
+      ],
+      "pattern": "I think we need to ~",
+      "difficulty": "medium"
+    },
+    {
+      "english": [
+        "Don't forget to turn on roaming before going abroad.",
+        "I already activated a data roaming plan yesterday."
+      ],
+      "korean": [
+        "해외로 출국하기 전에 로밍 켜는 거 잊지 마세요.",
+        "어제 이미 데이터 로밍 요금제를 활성화해 두었습니다."
+      ],
+      "pattern": "Don't forget to ~",
+      "difficulty": "easy"
+    },
+    {
+      "english": [
+        "We are running out of cash. We need to find an ATM.",
+        "There is a bank just across the street. Let's go there."
+      ],
+      "korean": [
+        "현금이 떨어져 가네요. 현금인출기를 찾아야 해요.",
+        "길 바로 건너편에 은행이 있어요. 저기로 가봅시다."
+      ],
+      "pattern": "We are running out of ~",
+      "difficulty": "hard"
+    },
+    {
+      "english": [
+        "It's up to you to decide where we go for dinner tonight.",
+        "I'd rather try some traditional street food at the night market."
+      ],
+      "korean": [
+        "오늘 저녁 먹으러 어디로 갈지는 당신의 결정에 달렸어요.",
+        "저는 차라리 야시장에서 전통 길거리 음식을 먹어보고 싶어요."
+      ],
+      "pattern": "It's up to you to ~",
+      "difficulty": "hard"
     }
   ]
 }
